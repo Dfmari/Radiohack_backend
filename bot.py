@@ -28,14 +28,14 @@ def start(message):
 @bot.message_handler(commands=['help'])
 def help(message):
     bot.send_message(message.chat.id, r"""
-    📚 **Команды Бота** 📚 
+📚 **Команды Бота** 📚 
     
-    ℹ️ /help Показывает этот список команд 
-    🎮 /play Даёт вам ссылку на игру
-    🏆 /top Посмотрите на лидеров по рейтингу
-    😎 /me Посмотрите на каком месте вы в рейтинге 
-    🛠️ /debug Не забудь удалить ;\)""",
-    parse_mode="MarkdownV2")
+ℹ️ /help Показывает этот список команд 
+🎮 /play Даёт вам ссылку на игру
+🏆 /top Посмотрите на лидеров по рейтингу
+😎 /me Посмотрите на каком месте вы в рейтинге 
+🛠️ /debug Не забудь удалить ;\)""",
+parse_mode="MarkdownV2")
 
 
 @bot.message_handler(commands=['debug'])
@@ -43,13 +43,12 @@ def debug(message):
     user = message.from_user
 
     bot.send_message(message.chat.id, f"""
-        🆔 User ID: {user.id}              
-        👤 First Name: {user.first_name}    
-        📛 Last Name: {user.last_name}      
-        🌐 Username: @{user.username}       
-        📱 Language: {user.language_code}  
-        🤖 Is Bot: {user.is_bot}            
-        """)
+🆔 User ID: {user.id}              
+👤 First Name: {user.first_name}    
+📛 Last Name: {user.last_name}      
+🌐 Username: @{user.username}       
+📱 Language: {user.language_code}  
+🤖 Is Bot: {user.is_bot}""")
 
 @bot.message_handler(commands=['play'])
 def play(message):
