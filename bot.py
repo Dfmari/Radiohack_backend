@@ -51,4 +51,16 @@ def debug(message):
         🤖 Is Bot: {user.is_bot}            
         """)
 
+@bot.message_handler(commands=['play'])
+def play(message):
+    bot.send_message(message.chat.id, 'this feature is WIP')
+
+@bot.message_handler(commands=['top'])
+def top(message):
+    bot.send_message(message.chat.id, 'this feature is WIP')
+
+@bot.message_handler(commands=['me'])
+def me(message):
+    bot.send_message(message.chat.id, 'this feature is WIP')
+
 bot.infinity_polling()
