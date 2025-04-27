@@ -1,5 +1,6 @@
 import os
 import telebot
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,7 +24,8 @@ bot.set_my_commands([
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, "🔍 Привет детектив 🔍 \n.... Надо сделать приветствие")
+    bot.send_message(message.chat.id, "🔍 Привет детектив 🔍 \n.... Надо сделать приветствие \n /play кстати ссылку выдаёт)")
+
 
 @bot.message_handler(commands=['help'])
 def help(message):
@@ -52,7 +54,13 @@ def debug(message):
 
 @bot.message_handler(commands=['play'])
 def play(message):
-    bot.send_message(message.chat.id, 'this feature is WIP')
+    bot.send_message(message.chat.id, 'when finished the link will look something like this https://radiohack-website.vercel.app/game?uid=s0M3_5tR1ng')
+    user = message.from_user
+    uid = user.id
+    uname = user.username
+    bot.send_message(message.chat.id, f"Вот ваша ссылка на игру \n https://radiohack-website.vercel.app/game")
+
+
 
 @bot.message_handler(commands=['top'])
 def top(message):
