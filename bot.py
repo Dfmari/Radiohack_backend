@@ -27,14 +27,12 @@ bot.set_my_commands([
 @bot.message_handler(commands=['start'])
 def start(message):
     global uname
-    global uid
     bot.send_message(message.chat.id, "🔍 Привет детектив 🔍 \n.... Надо сделать приветствие \n /play кстати ссылку выдаёт)")
     user = message.from_user
     if user.first_name == None:
         uname = "NO_USERNAME"
     else:
         uname = user.first_name
-
     uid = user.id
 
     '''
@@ -76,7 +74,7 @@ def debug(message):
 @bot.message_handler(commands=['play'])
 def play(message):
     bot.send_message(message.chat.id, 'when finished the link will look something like this https://radiohack-website.vercel.app/game?uid=s0M3_5tR1ng')
-    bot.send_message(message.chat.id, f"Вот ваша ссылка на игру \n https://radiohack-website.vercel.app/game")
+    bot.send_message(message.chat.id, f"Вот ваша ссылка на игру \n https://radiohack-website.vercel.app/game?uid=" + uid)
 
 
 
@@ -87,5 +85,29 @@ def top(message):
 @bot.message_handler(commands=['me'])
 def me(message):
     bot.send_message(message.chat.id, 'this feature is WIP')
+
+@bot.message_handler(commands=['/setname'])
+def getname(message):
+    bot.send_message(message.chat.id, 'Введите ваш новый ник')
+    bot.register_next_step_handler(message, setname)
+
+def setname(message):
+    global uname
+    old_uname = uname
+    uname = message.text
+    if not uname.isalpha():
+        bot.send_message(message.chat.id, '❌ К сожалению ник можеть быть только текстом)')
+        uname = old_uname
+        return
+    else:
+        bot.send_message(message.chat.id, '✅ Ник обновлён')
+        '''
+            SQL DATABASE ACTION
+
+            Заменяем в Users имя old_uname на uname
+
+            SQL DATABASE ACTION
+            '''
+
 
 bot.infinity_polling()
