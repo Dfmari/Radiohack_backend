@@ -12,7 +12,7 @@ if not BOT_TOKEN:
 
 bot = telebot.TeleBot(BOT_TOKEN)
 uname = ''
-uid = ''
+uid = 'EMPTY_UID'
 
 bot.set_my_commands([
     telebot.types.BotCommand("/start", "Приветствие"),
@@ -25,9 +25,10 @@ bot.set_my_commands([
 ])
 
 @bot.message_handler(commands=['start'])
-def start(message):
-    global uname
-    bot.send_message(message.chat.id, "🔍 Привет детектив 🔍 \n.... Надо сделать приветствие \n /play кстати ссылку выдаёт)")
+def start(message, headless=False):
+    global uname, uid
+    if not headless:
+        bot.send_message(message.chat.id, "🔍 Привет детектив 🔍 \n.... Надо сделать приветствие \n /play кстати ссылку выдаёт)")
     user = message.from_user
     if user.first_name == None:
         uname = "NO_USERNAME"
@@ -69,29 +70,75 @@ def debug(message):
 📛 Last Name: {user.last_name}      
 🌐 Username: @{user.username}       
 📱 Language: {user.language_code}  
-🤖 Is Bot: {user.is_bot}""")
+🤖 Is Bot: {user.is_bot}
+""")
 
 @bot.message_handler(commands=['play'])
 def play(message):
-    bot.send_message(message.chat.id, 'when finished the link will look something like this https://radiohack-website.vercel.app/game?uid=s0M3_5tR1ng')
-    bot.send_message(message.chat.id, f"Вот ваша ссылка на игру \n https://radiohack-website.vercel.app/game?uid=" + uid)
-
+    global uid
+    if uid == 'EMPTY_UID':
+        start(message, True)
+    bot.send_message(message.chat.id, f"Вот ваша ссылка на игру \n https://radiohack-website.vercel.app/game?uid=" + str(uid))
 
 
 @bot.message_handler(commands=['top'])
 def top(message):
     bot.send_message(message.chat.id, 'this feature is WIP')
+    '''
+    SQL DATABASE ACTION
+    
+    Запрашиваем uname и score для первых 5? по значению score
+    
+    SQL DATABASE ACTION
+    '''
+    leader1 = "Placeholder1"
+    score1 = 100
+    leader2 = "Placeholder2"
+    score2 = 99
+    leader3 = "Placeholder3"
+    score3 = 98
+    leader4 = "Placeholder4"
+    score4 = 97
+    leader5 = "Placeholder5"
+    score5 = 96
+
+    top = [[leader1, score1], [leader2, score2], [leader3, score3], [leader4, score4], [leader5, score5]]
+    message_top = '''
+🏆 Лидеры 🏆  
+'''
+    for i in range(len(top)):
+        if i == 0:
+            emoji = '🥇'
+        elif i == 1:
+            emoji = '🥈'
+        elif i == 2:
+            emoji = '🥉'
+        else :
+            emoji = '⭐'
+
+        message_top += f'\n{emoji} {top[i][0]} {top[i][1]}pts'
+    bot.send_message(message.chat.id, message_top)
+
+
 
 @bot.message_handler(commands=['me'])
 def me(message):
+    global uname, uid
+    '''
+    SQL DATABASE ACTION
+
+    Запрашиваем место данного uid в списке относительно score
+
+    SQL DATABASE ACTION
+    '''
     bot.send_message(message.chat.id, 'this feature is WIP')
 
 @bot.message_handler(commands=['/setname'])
-def getname(message):
+def get_name(message):
     bot.send_message(message.chat.id, 'Введите ваш новый ник')
-    bot.register_next_step_handler(message, setname)
+    bot.register_next_step_handler(message, set_name)
 
-def setname(message):
+def set_name(message):
     global uname
     old_uname = uname
     uname = message.text
@@ -101,7 +148,7 @@ def setname(message):
         return
     else:
         bot.send_message(message.chat.id, '✅ Ник обновлён')
-        '''
+'''
             SQL DATABASE ACTION
 
             Заменяем в Users имя old_uname на uname
