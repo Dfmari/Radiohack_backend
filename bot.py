@@ -1,6 +1,8 @@
 import os
 import telebot
-import base64
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 
 load_dotenv()
