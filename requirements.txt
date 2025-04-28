@@ -1,2 +1,3 @@
 pyTelegramBotAPI==4.12.0  # Main Telegram bot library
 python-dotenv==1.0.0      # For loading .env files
+psycopg2>=2.9.0

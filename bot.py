@@ -2,13 +2,33 @@ import os
 import telebot
 import base64
 from dotenv import load_dotenv
+import psycopg2
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_API_TOKEN")
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname")
 
 if not BOT_TOKEN:
     raise ValueError("❌ No BOT_API_TOKEN found! Check .env or GitHub Secrets.")
+
+try:
+    connection = psycopg2.connect(
+        user=USER,
+        password=PASSWORD,
+        host=HOST,
+        port=PORT,
+        dbname=DBNAME
+    )
+    
+    # Create a cursor to execute SQL queries
+    cursor = connection.cursor()
+except Exception as e:
+    print(f"Failed to connect: {e}")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 uname = ''
@@ -28,7 +48,7 @@ bot.set_my_commands([
 def start(message, headless=False):
     global uname, uid
     if not headless:
-        bot.send_message(message.chat.id, "🔍 Привет детектив 🔍 \n.... Надо сделать приветствие \n /play кстати ссылку выдаёт)")
+        bot.send_message(message.chat.id, "Привет, это бот для получения ссылки на игру, по кнопкам ты найдешь всю важную информацию \n /play кстати ссылку выдаёт)")
     user = message.from_user
     if user.first_name == None:
         uname = "NO_USERNAME"
@@ -36,14 +56,28 @@ def start(message, headless=False):
         uname = user.first_name
     uid = user.id
 
-    '''
-    SQL DATABASE ACTION
-    
-    Отправляем uname как ник и uid как ключ в базу Users
-    
-    SQL DATABASE ACTION
-    '''
-
+    try:
+        # Проверка наличия пользователя в базе данных
+        cursor.execute('SELECT * FROM users WHERE id=%s', (uid,))
+        existing_user = cursor.fetchone()
+        
+        if existing_user is None:
+            insert_query = """INSERT INTO users(id, username) VALUES (%s, %s);"""
+            data_to_insert = (uid, uname)
+            cursor.execute(insert_query, data_to_insert)
+            connection.commit()  # Применяем изменения
+            
+            bot.send_message(message.chat.id, f"Приветствуем новичка {uname}, теперь ты официально зарегистрирован!")
+        else:
+            # Обновление имени пользователя, если оно изменилось
+            update_query = """UPDATE users SET username=%s WHERE id=%s;"""
+            data_to_update = (uname, uid)
+            cursor.execute(update_query, data_to_update)
+            connection.commit()
+            
+            bot.send_message(message.chat.id, f"С возвращением, {uname}. Твои данные обновлены.")
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка при работе с базой данных: {e}")
 
 
 @bot.message_handler(commands=['help'])
@@ -83,55 +117,61 @@ def play(message):
 
 @bot.message_handler(commands=['top'])
 def top(message):
-    bot.send_message(message.chat.id, 'this feature is WIP')
-    '''
-    SQL DATABASE ACTION
-    
-    Запрашиваем uname и score для первых 5? по значению score
-    
-    SQL DATABASE ACTION
-    '''
-    leader1 = "Placeholder1"
-    score1 = 100
-    leader2 = "Placeholder2"
-    score2 = 99
-    leader3 = "Placeholder3"
-    score3 = 98
-    leader4 = "Placeholder4"
-    score4 = 97
-    leader5 = "Placeholder5"
-    score5 = 96
-
-    top = [[leader1, score1], [leader2, score2], [leader3, score3], [leader4, score4], [leader5, score5]]
-    message_top = '''
+    try:
+        # Получаем топ пользователей по количеству очков
+        cursor.execute("""
+            SELECT username, score 
+            FROM users 
+            ORDER BY score DESC LIMIT 5;
+        """)
+        leaders = cursor.fetchall()
+        
+        message_top = '''
 🏆 Лидеры 🏆  
 '''
-    for i in range(len(top)):
-        if i == 0:
-            emoji = '🥇'
-        elif i == 1:
-            emoji = '🥈'
-        elif i == 2:
-            emoji = '🥉'
-        else :
-            emoji = '⭐'
-
-        message_top += f'\n{emoji} {top[i][0]} {top[i][1]}pts'
-    bot.send_message(message.chat.id, message_top)
+        for idx, (username, score) in enumerate(leaders):
+            if idx == 0:
+                emoji = '🥇'
+            elif idx == 1:
+                emoji = '🥈'
+            elif idx == 2:
+                emoji = '🥉'
+            else:
+                emoji = '⭐'
+                
+            message_top += f"\n{emoji} {username}: {score} pts"
+        
+        bot.send_message(message.chat.id, message_top)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка при получении рейтинга: {e}")
 
 
 
 @bot.message_handler(commands=['me'])
 def me(message):
     global uname, uid
-    '''
-    SQL DATABASE ACTION
-
-    Запрашиваем место данного uid в списке относительно score
-
-    SQL DATABASE ACTION
-    '''
-    bot.send_message(message.chat.id, 'this feature is WIP')
+    try:
+        # Определяем позицию текущего игрока среди остальных участников
+        cursor.execute('''
+            WITH RankedUsers AS (
+                SELECT *, RANK() OVER (ORDER BY score DESC) AS rank
+                FROM users
+            )
+            SELECT rank, username, score 
+            FROM RankedUsers 
+            WHERE id=%s;
+        ''', (uid,))
+        result = cursor.fetchone()
+        
+        if result:
+            position, username, score = result
+            response = f"Твое место в рейтинге: {position}\nИмя: {username}\nОчки: {score}"
+        else:
+            response = "Пользователь не найден."
+        
+        bot.send_message(message.chat.id, response)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка при определении позиции: {e}")
 
 @bot.message_handler(commands=['/setname'])
 def get_name(message):
@@ -140,21 +180,19 @@ def get_name(message):
 
 def set_name(message):
     global uname
-    old_uname = uname
-    uname = message.text
-    if not uname.isalpha():
+    new_username = message.text
+    if not new_username.isalpha():
         bot.send_message(message.chat.id, '❌ К сожалению ник можеть быть только текстом)')
-        uname = old_uname
         return
     else:
         bot.send_message(message.chat.id, '✅ Ник обновлён')
-'''
-            SQL DATABASE ACTION
-
-            Заменяем в Users имя old_uname на uname
-
-            SQL DATABASE ACTION
-            '''
+        try:
+            # Обновляем имя пользователя в базе данных
+            cursor.execute("UPDATE users SET username=%s WHERE id=%s;", (new_username, uid))
+            connection.commit()
+            uname = new_username
+        except Exception as e:
+            bot.send_message(message.chat.id, f'Ошибка обновления имени: {e}')
 
 
 bot.infinity_polling()
