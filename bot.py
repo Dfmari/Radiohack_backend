@@ -36,50 +36,10 @@ bot.set_my_commands([
     telebot.types.BotCommand("/setname", "Поменять ник"),
     telebot.types.BotCommand("/debug", "Не забудь удалить ;)"),
 ])
-'''Не удаляю потому что я возможно идиот
-@bot.message_handler(commands=['start'])
-def start(message, headless=False):
-    global uname, uid
-    if not headless:
-        bot.send_message(message.chat.id, "Привет, это бот для получения ссылки на игру, по кнопкам ты найдешь всю важную информацию \n /play кстати ссылку выдаёт)")
-    user = message.from_user
-    if user.first_name == None:
-        uname = "NO_USERNAME"
-    else:
-        uname = user.first_name
-    uid = user.id
-
-    try:
-        # Проверка наличия пользователя в базе данных
-        cursor.execute('SELECT * FROM users WHERE id=%s', (uid,))
-        existing_user = cursor.fetchone()
-        
-        if existing_user is None:
-            insert_query = """INSERT INTO users(id, username) VALUES (%s, %s);"""
-            data_to_insert = (uid, uname)
-            cursor.execute(insert_query, data_to_insert)
-            connection.commit()  # Применяем изменения
-            
-            bot.send_message(message.chat.id, f"Приветствуем новичка {uname}, теперь ты официально зарегистрирован!")
-        else:
-            # Обновление имени пользователя, если оно изменилось
-            update_query = """UPDATE users SET username=%s WHERE id=%s;"""
-            data_to_update = (uname, uid)
-            cursor.execute(update_query, data_to_update)
-            connection.commit()
-            
-            bot.send_message(message.chat.id, f"С возвращением, {uname}. Твои данные обновлены.")
-    except Exception as e:
-        bot.send_message(message.chat.id, f"Ошибка при работе с базой данных: {e}")
-'''
-
 
 @bot.message_handler(commands=['start'])
 def start(message, headless=False):
     global uname, uid
-    # Welcome user if not running in headless mode
-    if not headless:
-        bot.send_message(message.chat.id,"Привет, это бот для получения ссылки на игру, по кнопкам ты найдешь всю важную информацию \n /play кстати ссылку выдаёт)")
 
     # Collecting user data
     user = message.from_user
