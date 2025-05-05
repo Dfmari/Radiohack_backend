@@ -4,6 +4,6 @@ telegram bot for Kontur web game
 
 Фрагменты, реализующие взаимодействие с базой данных, нуждаются в доработке
 
-База данных развернута на https://supabase.com/
+База данных развернута на https://www.cockroachlabs.com
 
 Бэкэнд развернут на https://www.pythonanywhere.com/
